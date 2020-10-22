@@ -2,83 +2,69 @@ import java.util.concurrent.Semaphore;
 
 public class SemaforoBinario {
 
-    //permite apenas uma thread por vez
 	static Semaphore semaphore = new Semaphore(1);
 
-	static class MutexThread extends Thread {
+	static class MinhaThread extends Thread {
 
-        //define nome da thread
-		String name = "";
-
-		MutexThread(String name) {
-			this.name = name;
+		private String nome;
+		private int tempo;
+	
+		//construtor que inicia a thread
+		public MinhaThread(String nome, int tempo){
+			this.nome = nome;
+			this.tempo = tempo;
+			start();
 		}
+	
+		//metodo que executa a thread
+		public void run(){
+			
+			System.out.println("---------------------------------------------------------------------");
 
-        //começa a execução da thread
-		public void teste() {
+			try{
 
-			try {
-
-                //verifica se o semáforo está disponível
-				System.out.println(name + " : semáforos disponíveis: " + semaphore.availablePermits());
-
-                //bloqueia o uso de outros semaforos até que a thread termine a execução
+				System.out.println("\nSemáforos disponíveis: " + semaphore.availablePermits());
 				semaphore.acquire();
-				System.out.println(name + " : começou a execução");
 
-                //executa a thread
-				try {
+				System.out.println("Iniciando a execução da " + nome + "\n\n");
 
-					for (int i = 1; i <= 5; i++) {
+				try{
 
-						System.out.println(name + " : executando operação " + i + ", semáforos disponíveis : " + semaphore.availablePermits());
+					System.out.println(nome + " na seção crítica\n");
 
-						// espera um segundo para simular uma operação 'demorada'
-						Thread.sleep(1000);
+					for (int i=0; i<4; i++){
 
+						System.out.println("Semáforos disponíveis: " + semaphore.availablePermits());
+
+						System.out.println(nome + " Hello World " + i);
+						Thread.sleep(tempo);
 					}
 
+					System.out.println("\n\n" + nome + " na seção não crítica");
+
 				} finally {
-
-                    //libera o semáforo
 					semaphore.release();
-					System.out.println(name + " : semáforos disponíveis: " + semaphore.availablePermits());
-
+					System.out.println("Semáforos disponíveis: " + semaphore.availablePermits() + "\n\n");
 				}
 
-			} catch (InterruptedException e) {
-
-				e.printStackTrace();
-
+			} catch(InterruptedException e) {
+				System.out.println("Erro ao adquirir permissão para a " + nome);
 			}
 
+			System.out.println("---------------------------------------------------------------------");
+
+
 		}
-
+	
 	}
-
 	public static void main(String[] args) {
 
-		System.out.println("Total de semáforos disponíveis : " + semaphore.availablePermits());
+		for(int i = 0; i < 100; i++){
 
-        //instancia as threads e inicia suas execuções
-        
-		MutexThread t1 = new MutexThread("A");
-		t1.teste();
-
-		MutexThread t2 = new MutexThread("B");
-		t2.teste();
-
-		MutexThread t3 = new MutexThread("C");
-		t3.teste();
-
-		MutexThread t4 = new MutexThread("D");
-		t4.teste();
-
-		MutexThread t5 = new MutexThread("E");
-		t5.teste();
-
-		MutexThread t6 = new MutexThread("F");
-		t6.teste();
-
+			MinhaThread thread = new MinhaThread("Thread " + i, (i+1)*2);
+		}
 	}
 }
+
+
+
