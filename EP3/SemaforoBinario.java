@@ -23,6 +23,7 @@ public class SemaforoBinario {
 
 			try{
 
+				//verifica se existe um semaforo disponivel
 				System.out.println("\nSemáforos disponíveis: " + semaphore.availablePermits());
 				semaphore.acquire();
 
@@ -30,6 +31,7 @@ public class SemaforoBinario {
 
 				try{
 
+					//caso o semaforo esteja disponivel, a thread e executada
 					System.out.println(nome + " na seção crítica\n");
 
 					for (int i=0; i<4; i++){
@@ -40,9 +42,12 @@ public class SemaforoBinario {
 						Thread.sleep(tempo);
 					}
 
+					//depois de executada a thread sai da secao critica
 					System.out.println("\n\n" + nome + " na seção não crítica");
 
 				} finally {
+
+					//e o semaforo e liberado
 					semaphore.release();
 					System.out.println("Semáforos disponíveis: " + semaphore.availablePermits() + "\n\n");
 				}
@@ -59,6 +64,7 @@ public class SemaforoBinario {
 	}
 	public static void main(String[] args) {
 
+		//inicia a execucao de 100 threads
 		for(int i = 0; i < 100; i++){
 
 			MinhaThread thread = new MinhaThread("Thread " + i, (i+1)*2);
