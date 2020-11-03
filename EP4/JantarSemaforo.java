@@ -94,6 +94,7 @@ class Semaforo {
 
             try {
 
+                //adquire a permissão para pegar o hashi
                 semaphore.acquire();
 
                 try {
@@ -107,7 +108,7 @@ class Semaforo {
                 } catch (Exception e) {}
             } catch (InterruptedException e){}
      
-             tentativas[filosofo] = 0; //???
+             tentativas[filosofo] = 0;
              
              /*após o filósofo sair do loop sem sucesso, significa que os hashis a sua
              direita e a sua esquerda estão disponíveis, portanto, ele irá pegá-los */
