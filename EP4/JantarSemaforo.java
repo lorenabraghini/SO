@@ -1,73 +1,78 @@
 import java.util.concurrent.Semaphore;
 
-public class JantarSemaforo { //classe principal 
-      public static void main(String[] args) {
-         Mesa mesa = new Mesa (); //instância de Mesa
-         for (int filosofo = 0; filosofo < 5; filosofo++) { //iteração que cria 5 threads de 5 filósofos diferentes
+public class JantarSemaforo { // classe principal
+    public static void main(String[] args) {
+        Semaforo.Mesa mesa = new Semaforo.Mesa(); // instância de Mesa
+        for (int filosofo = 0; filosofo < 5; filosofo++) { // iteração que cria 5 threads de 5 filósofos diferentes
             new Filosofo("Filosofo_" + filosofo, mesa, filosofo).start();
         }
-        System.out.println("----------------------------------------------------------------------------------------------------------------");
+        System.out.println(
+                "----------------------------------------------------------------------------------------------------------------");
 
     }
 }
 
-class Filosofo extends Thread { //classe que representa os filósofos como threads
-   final static int TEMPO_MAXIMO = 100; //tempo máximo que um filósofo pode ficar comendo ou pensando
-   Mesa mesa;
-   int filosofo; //número do filósofo
+class Filosofo extends Thread { // classe que representa os filósofos como threads
+    final static int TEMPO_MAXIMO = 100; // tempo máximo que um filósofo pode ficar comendo ou pensando
+    Semaforo.Mesa mesa;
+    int filosofo; // número do filósofo
 
-    public Filosofo(String nome, Mesa mesadejantar, int filo) { //construtor da classe
-      super(nome);
-      mesa = mesadejantar;
-      filosofo = filo;
-      System.out.println("O Filosofo " + filosofo + " sentou-se a mesa");
+    public Filosofo(String nome, Semaforo.Mesa mesadejantar, int filo) { // construtor da classe
+        super(nome);
+        mesa = mesadejantar;
+        filosofo = filo;
+        System.out.println("O Filosofo " + filosofo + " sentou-se a mesa");
     }
-    /*método que determina quando um filósofo irá comer ou 
-    pensar devido ao seu tempo decorrido em cada estado*/
-    public void run() { 
+
+    /*
+     * método que determina quando um filósofo irá comer ou pensar devido ao seu
+     * tempo decorrido em cada estado
+     */
+    public void run() {
         int tempo = 0;
         while (true) {
             tempo = (int) (Math.random() * TEMPO_MAXIMO);
-            pensar(tempo); //após passar um determinado tempo pensando o filósofo deve pegar os hashis e comer
+            pensar(tempo); // após passar um determinado tempo pensando o filósofo deve pegar os hashis e
+                           // comer
             getHashi();
             tempo = (int) (Math.random() * TEMPO_MAXIMO);
-            comer(tempo); //após passar um determinado tempo comendo o filósofo deve largar os hashis e pensar
+            comer(tempo); // após passar um determinado tempo comendo o filósofo deve largar os hashis e
+                          // pensar
             returnHashi();
         }
     }
 
-    public void pensar(int tempo) { //método que representa o filósofo pensando
+    public void pensar(int tempo) { // método que representa o filósofo pensando
         try {
             sleep(tempo);
-        }
-        catch (InterruptedException e) { //caso passe do tempo máximo
+        } catch (InterruptedException e) { // caso passe do tempo máximo
             System.out.println("O Filosofo pensou muito");
         }
     }
 
-    public void comer(int tempo) { //método que representa o filósofo comendo
+    public void comer(int tempo) { // método que representa o filósofo comendo
         try {
             sleep(tempo);
-        }
-        catch (InterruptedException e) { //caso passe do tempo máximo
-            System.out.println("O Filosofo comeu muito");
+        } catch (InterruptedException e) { // caso passe do tempo máximo
+            System.out.println("O Filosofo comeu muito"); // causa o deadlock de outros processos
         }
     }
 
-    public void getHashi() { //método auxiliar para os filósofos pegarem os Hashis
+    public void getHashi() { // método auxiliar para os filósofos pegarem os Hashis
         mesa.pegarHashis(filosofo);
     }
 
-    public void returnHashi() { //método auxiliar para os filósofos largarem os Hashis
-      mesa.returningHashis(filosofo);
+    public void returnHashi() { // método auxiliar para os filósofos largarem os Hashis
+        mesa.returningHashis(filosofo);
     }
 }
 
 class Semaforo {
 
-    static Semaphore semaphore = new Semaphore(5);
+    static Semaphore semaphoreD = new Semaphore(5);
+    static Semaphore semaphoreE = new Semaphore(5);
 
-    static class Mesa { //classe que representa o que está acontecendo na mesa
+    static class Mesa { // classe que representa o que está acontecendo na mesa
 
         final static int PENSANDO = 1;
         final static int COMENDO = 2;
@@ -75,175 +80,201 @@ class Semaforo {
         final static int NR_FILOSOFOS = 5;
         final static int PRIMEIRO_FILOSOFO = 0;
         final static int ULTIMO_FILOSOFO = NR_FILOSOFOS - 1;
-        boolean[] hashis = new boolean[NR_FILOSOFOS]; //array para verificar se um hashi está disponível ou ocupado
-        int[] filosofos = new int[NR_FILOSOFOS]; //array representando os 5 filósofos na mesa
-        int[] tentativas = new int[NR_FILOSOFOS]; //array represetando o número de tentativas de comer de cada filósofo 
-     
-        public Mesa() { //construtor da classe que seta os três arrays citados acima
+        boolean[] hashis = new boolean[NR_FILOSOFOS]; // array para verificar se um hashi está disponível ou ocupado
+        int[] filosofos = new int[NR_FILOSOFOS]; // array representando os 5 filósofos na mesa
+        int[] tentativas = new int[NR_FILOSOFOS]; // array represetando o número de tentativas de comer de cada filósofo
 
-             for (int i = 0; i < 5; i++) {
-                hashis[i] = true; //todos os hashis começam como "disponível (true)"
+        public Mesa() { // construtor da classe que seta os três arrays citados acima
+
+            for (int i = 0; i < 5; i++) {
+                hashis[i] = true; // todos os hashis começam como "disponível (true)"
                 filosofos[i] = PENSANDO;
                 tentativas[i] = 0;
             }
-         }
+        }
 
-         /*método para o filósofo (thread) pegar os Hashis 
-         um por vez. Recebe o número do filosofo que irá tentar executar esta ação*/
-         public void pegarHashis(int filosofo) { 
+        /*
+         * método para o filósofo (thread) pegar os Hashis um por vez. Recebe o número
+         * do filosofo que irá tentar executar esta ação
+         */
+        public void pegarHashis(int filosofo) {
 
             try {
 
-                //adquire a permissão para pegar o hashi
-                semaphore.acquire();
+                // adquire a permissão para pegar os hashis
+                semaphoreD.acquire();
+                semaphoreE.acquire();
 
                 try {
 
-                    filosofos[filosofo] = FOME; //a princípio define o filósofo com o status fome 
-                    
-                    /*enquanto o filósofo a sua esquerda ou a sua direita estiverem comendo,
-                    o filósofo em questão irá tentar pegar hashis, mas sem sucesso*/
-                    while (filosofos[aEsquerda(filosofo)] == COMENDO || filosofos[aDireita(filosofo)] == COMENDO) tentativas[filosofo]++;
+                    filosofos[filosofo] = FOME; // a princípio define o filósofo com o status fome
 
-                } catch (Exception e) {}
-            } catch (InterruptedException e){}
-     
-             tentativas[filosofo] = 0;
-             
-             /*após o filósofo sair do loop sem sucesso, significa que os hashis a sua
-             direita e a sua esquerda estão disponíveis, portanto, ele irá pegá-los */
-     
-             hashis[hashiEsquerdo(filosofo)] = false; //definindo hashi a sua esquerda como ocupado
-             System.out.println("O Filosofo " + filosofo + " pegou o hashi " + hashiEsquerdo(filosofo));
-     
-             hashis[hashiDireito(filosofo)] = false; //definindo hashi a sua direita como ocupado
-             System.out.println("O Filosofo " + filosofo + " pegou o hashi " + hashiDireito(filosofo));
-     
-             //System.out.println("----------------------------------------------------------------------------------------------------------------");
-     
-             filosofos[filosofo] = COMENDO; //após pegar os dois hashis o filósofo irá comer
-     
-             imprimeHashis();
-             System.out.println("----------------------------------------------------------------------------------------------------------------");
-             imprimeTentativas();
-             System.out.println("----------------------------------------------------------------------------------------------------------------");
-             imprimeEstadosFilosofos(); 
-             System.out.println("----------------------------------------------------------------------------------------------------------------");
-             System.out.println("----------------------------------------------NOVO CICLO--------------------------------------------------------");
-        }
-     
-         /*método para o filósofo (thread) largar os Hashis um 
-         por vez após passar pelo tempo limite comendo.*/
-         public void returningHashis(int filosofo){
-     
-            /*como este método é chamado sempre que um filosofo passou tempo suficiente pensando 
-            não é necessário um loop para verificação ou condicionais para largar os hashis*/
-             
-            hashis[hashiEsquerdo(filosofo)] = true;//definindo hashi a sua esquerda como disponível
-            System.out.println("O Filosofo " + filosofo + " largou o hashi " + hashiEsquerdo(filosofo));
-     
-            hashis[hashiDireito(filosofo)] = true; //definindo hashi a sua direita como disponível
-            System.out.println("O Filosofo " + filosofo + " largou o hashi " + hashiDireito(filosofo));
-     
-            System.out.println("----------------------------------------------------------------------------------------------------------------");
-            
-            semaphore.release(); //após o filosofo soltar os hashis estes são liberados
-            
-            filosofos[filosofo] = PENSANDO; //o filoso que largou os hashis irá agora pensar
-             
+                    /*
+                     * enquanto o filósofo a sua esquerda ou a sua direita estiverem comendo, o
+                     * filósofo em questão irá tentar pegar hashis, mas sem sucesso
+                     */
+                    while (filosofos[aEsquerda(filosofo)] == COMENDO || filosofos[aDireita(filosofo)] == COMENDO)
+                        tentativas[filosofo]++;
+
+                } catch (Exception e) {
+                }
+            } catch (InterruptedException e) {
+
+                // se após muitas tentativas não conseguir comer, o filósofo morre devido a
+                // starvation.
+                System.out.println("O Filosofo morreu devido a starvation.");
+            }
+
+            tentativas[filosofo] = 0;
+
+            /*
+             * após o filósofo sair do loop sem sucesso, significa que os hashis a sua
+             * direita e a sua esquerda estão disponíveis, portanto, ele irá pegá-los
+             */
+
+            hashis[hashiEsquerdo(filosofo)] = false; // definindo hashi a sua esquerda como ocupado
+            System.out.println("O Filosofo " + filosofo + " pegou o hashi " + hashiEsquerdo(filosofo));
+
+            hashis[hashiDireito(filosofo)] = false; // definindo hashi a sua direita como ocupado
+            System.out.println("O Filosofo " + filosofo + " pegou o hashi " + hashiDireito(filosofo));
+
+            filosofos[filosofo] = COMENDO; // após pegar os dois hashis o filósofo irá comer
+
             imprimeHashis();
-            System.out.println("----------------------------------------------------------------------------------------------------------------");
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------");
             imprimeTentativas();
-            System.out.println("----------------------------------------------------------------------------------------------------------------");
-            imprimeEstadosFilosofos(); 
-            System.out.println("----------------------------------------------------------------------------------------------------------------");
-            System.out.println("----------------------------------------------NOVO CICLO--------------------------------------------------------");
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------");
+            imprimeEstadosFilosofos();
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------");
+            System.out.println(
+                    "----------------------------------------------NOVO CICLO--------------------------------------------------------");
         }
-     
-         public int aDireita(int filosofo){ //método para verificar qual é o filosofo a direita do chamado
+
+        /*
+         * método para o filósofo (thread) largar os Hashis um por vez após passar pelo
+         * tempo limite comendo.
+         */
+        public void returningHashis(int filosofo) {
+
+            /*
+             * como este método é chamado sempre que um filosofo passou tempo suficiente
+             * pensando não é necessário um loop para verificação ou condicionais para
+             * largar os hashis
+             */
+
+            hashis[hashiEsquerdo(filosofo)] = true;// definindo hashi a sua esquerda como disponível
+            System.out.println("O Filosofo " + filosofo + " largou o hashi " + hashiEsquerdo(filosofo));
+
+            hashis[hashiDireito(filosofo)] = true; // definindo hashi a sua direita como disponível
+            System.out.println("O Filosofo " + filosofo + " largou o hashi " + hashiDireito(filosofo));
+
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------");
+
+            semaphoreD.release(); // após o filosofo soltar o hashi da direita este é liberado
+            semaphoreE.release(); // após o filosofo soltar o hashi da esquerda este é liberado
+
+            filosofos[filosofo] = PENSANDO; // o filoso que largou os hashis irá agora pensar
+
+            imprimeHashis();
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------");
+            imprimeTentativas();
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------");
+            imprimeEstadosFilosofos();
+            System.out.println(
+                    "----------------------------------------------------------------------------------------------------------------");
+            System.out.println(
+                    "----------------------------------------------NOVO CICLO--------------------------------------------------------");
+        }
+
+        public int aDireita(int filosofo) { // método para verificar qual é o filosofo a direita do chamado
 
             int direito;
-            if (filosofo == ULTIMO_FILOSOFO){ //se o filosofo em questão for o último, o seu a direita será o primeiro
+            if (filosofo == ULTIMO_FILOSOFO) { // se o filosofo em questão for o último, o seu a direita será o primeiro
                 direito = PRIMEIRO_FILOSOFO;
-            }
-            else{
+            } else {
                 direito = filosofo + 1;
             }
             return direito;
         }
-     
-         public int aEsquerda(int filosofo){ //método para verificar qual é o filosofo a esquerda do chamado
+
+        public int aEsquerda(int filosofo) { // método para verificar qual é o filosofo a esquerda do chamado
 
             int esquerdo;
-            if (filosofo == PRIMEIRO_FILOSOFO){ //se o filosofo em questão for o primeiro, o seu a direita será o último
+            if (filosofo == PRIMEIRO_FILOSOFO) { // se o filosofo em questão for o primeiro, o seu a direita será o
+                                                 // último
                 esquerdo = ULTIMO_FILOSOFO;
-            }
-            else{
+            } else {
                 esquerdo = filosofo - 1;
             }
             return esquerdo;
         }
-     
-        public int hashiEsquerdo (int filosofo){ //método para definir qual é o hashi a esquerda do filósofo
+
+        public int hashiEsquerdo(int filosofo) { // método para definir qual é o hashi a esquerda do filósofo
             int hashiEsquerdo = filosofo;
             return hashiEsquerdo;
         }
-     
-        public int hashiDireito (int filosofo){ //método para definir qual é o hashi a direita do filósofo
+
+        public int hashiDireito(int filosofo) { // método para definir qual é o hashi a direita do filósofo
 
             int hashiDireito;
-            if (filosofo == ULTIMO_FILOSOFO){ //se o filosofo em questão for o último, o hashi será o primeiro
+            if (filosofo == ULTIMO_FILOSOFO) { // se o filosofo em questão for o último, o hashi será o primeiro
                 hashiDireito = 0;
-            }
-            else {
-              hashiDireito = filosofo + 1;
+            } else {
+                hashiDireito = filosofo + 1;
             }
             return hashiDireito;
         }
-     
-        public void imprimeEstadosFilosofos(){ //método que printa o estado de todos as threads a cada ciclo
+
+        public void imprimeEstadosFilosofos() { // método que printa o estado de todos as threads a cada ciclo
             String texto = "*";
-            for (int i = 0; i < NR_FILOSOFOS; i++){ //iteração que irá passar por todos os filósofos(threads)
+            for (int i = 0; i < NR_FILOSOFOS; i++) { // iteração que irá passar por todos os filósofos(threads)
                 System.out.print("O Filosofo " + i + " Esta ");
-                switch (filosofos[i]){ //verifica qual o estado do filósofo 
-                    case PENSANDO :
-                    texto = "PENSANDO";
-                    break;
-                    case FOME :
-                    texto = "COM FOME";
-                    break;
-                    case COMENDO :
-                    texto = "COMENDO";
-                    break;
+                switch (filosofos[i]) { // verifica qual o estado do filósofo
+                    case PENSANDO:
+                        texto = "PENSANDO";
+                        break;
+                    case FOME:
+                        texto = "COM FOME";
+                        break;
+                    case COMENDO:
+                        texto = "COMENDO";
+                        break;
                 }
                 System.out.print(texto + " \n");
             }
         }
-     
-        public void imprimeHashis(){ //método que printa o estado de todos os hashis a cada ciclo
+
+        public void imprimeHashis() { // método que printa o estado de todos os hashis a cada ciclo
 
             String hashi = "*";
             System.out.print("Hashis = [");
 
-            for (int i = 0; i < NR_FILOSOFOS; i++){
+            for (int i = 0; i < NR_FILOSOFOS; i++) {
 
                 System.out.print("HASHI " + i);
 
-                if (hashis[i]){
+                if (hashis[i]) {
                     hashi = " LIVRE";
-                }
-                else{
+                } else {
                     hashi = " OCUPADO";
                 }
                 System.out.print(hashi);
-                if(i != 4) System.out.print(" | ");
+                if (i != 4)
+                    System.out.print(" | ");
             }
-            
+
             System.out.println("]");
         }
-     
-        public void imprimeTentativas(){ //método que printa a quantidade de vezes que um filosofo tentou pegar os hashis
-            for (int i = 0; i < NR_FILOSOFOS; i++){
+
+        public void imprimeTentativas() { // método que printa a quantidade de vezes que um filosofo tentou pegar os
+                                          // hashis
+            for (int i = 0; i < NR_FILOSOFOS; i++) {
                 System.out.println("O Filosofo " + i + " Tentou Pegar Hashi " + filosofos[i] + " Vez(es)");
             }
         }
